@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/tosif-practice/go-job-hunt/autoupdate/foundit"
 	"github.com/tosif-practice/go-job-hunt/autoupdate/naukri"
 )
 
@@ -18,6 +19,9 @@ func main() {
 	naukriProfileID := flag.String("naukriProfileID", "195f55250ed2eb35385e179918b66caea986ae7a16b995ac11e56d4c06f64435", "Naukri profile ID to submit the resume to")
 	naukriToken := flag.String("naukriToken", "", "Naukri bearer token for authorization")
 
+	// FoundIt-specific flags
+	founditCookieFile := flag.String("founditCookieFile", "cookies-foundit.txt", "path to FoundIt cookie file")
+
 	flag.Parse()
 
 	if *filePath == "" {
@@ -25,24 +29,33 @@ func main() {
 	}
 
 	// Run all platforms
-	runAllPlatforms(*filePath, *naukriCookieFile, *naukriFormKey, *naukriFileKey, *naukriProfileID, *naukriToken)
+	runAllPlatforms(*filePath, platformConfigs{
+		naukri: naukri.Config{
+			CookieFile:  *naukriCookieFile,
+			FormKey:     *naukriFormKey,
+			FileKey:     *naukriFileKey,
+			ProfileID:   *naukriProfileID,
+			BearerToken: *naukriToken,
+		},
+		foundit: foundit.Config{
+			CookieFile: *founditCookieFile,
+		},
+	})
 }
 
-func runAllPlatforms(filePath, naukriCookieFile, naukriFormKey, naukriFileKey, naukriProfileID, naukriToken string) {
+type platformConfigs struct {
+	naukri  naukri.Config
+	foundit foundit.Config
+}
+
+func runAllPlatforms(filePath string, configs platformConfigs) {
 	fmt.Println("=== Running Naukri ===")
-	if err := naukri.Run(filePath, naukri.Config{
-		CookieFile:  naukriCookieFile,
-		FormKey:     naukriFormKey,
-		FileKey:     naukriFileKey,
-		ProfileID:   naukriProfileID,
-		BearerToken: naukriToken,
-	}); err != nil {
+	if err := naukri.Run(filePath, configs.naukri); err != nil {
 		log.Printf("naukri: %v", err)
 	}
 
-	// Add more platforms here as they are implemented
-	// fmt.Println("=== Running FoundIt ===")
-	// if err := foundit.Run(filePath, foundit.Config{...}); err != nil {
-	//     log.Printf("foundit: %v", err)
-	// }
+	fmt.Println("\n=== Running FoundIt ===")
+	if err := foundit.Run(filePath, configs.foundit); err != nil {
+		log.Printf("foundit: %v", err)
+	}
 }
