@@ -1,4 +1,4 @@
-package filevalidation
+package naukri
 
 import (
 	"bytes"
@@ -311,4 +311,69 @@ func SubmitResume(profileID, formKey, fileKey, bearerToken, cookieHeader string)
 	}
 
 	return resp, respBody, nil
+}
+
+// Config holds Naukri-specific configuration
+type Config struct {
+	CookieFile  string
+	FormKey     string
+	FileKey     string
+	ProfileID   string
+	BearerToken string
+}
+
+// Run executes the full Naukri resume update workflow
+func Run(filePath string, cfg Config) error {
+	var token string
+	var cookies string
+	var err error
+
+	if cfg.CookieFile != "" {
+		cookies, err = ReadCookieHeader(cfg.CookieFile)
+		if err != nil {
+			return fmt.Errorf("failed to read cookie file: %w", err)
+		}
+
+		var valid bool
+		token, valid = IsTokenValid(cookies)
+		if valid {
+			fmt.Println("naukri: using existing valid token from cookie file")
+		} else {
+			fmt.Println("naukri: token missing or invalid, calling login-status...")
+			token, cookies, err = LoginStatus(cookies)
+			if err != nil {
+				return fmt.Errorf("login-status failed: %w", err)
+			}
+			if err := SaveCookieHeader(cfg.CookieFile, cookies); err != nil {
+				fmt.Printf("naukri: warning: failed to save merged cookies: %v\n", err)
+			} else {
+				fmt.Println("naukri: updated cookie file with merged cookies")
+			}
+		}
+	} else {
+		token = cfg.BearerToken
+	}
+
+	if token == "" {
+		return fmt.Errorf("missing required bearer token; provide BearerToken or CookieFile")
+	}
+
+	uploadResp, _, err := UploadFile(filePath, cfg.FormKey, cfg.FileKey)
+	if err != nil {
+		return fmt.Errorf("upload failed: %w", err)
+	}
+	uploadResp.Body.Close()
+
+	fmt.Printf("naukri: upload status: %s\n", uploadResp.Status)
+
+	submitResp, submitBody, err := SubmitResume(cfg.ProfileID, cfg.FormKey, cfg.FileKey, token, cookies)
+	if err != nil {
+		return fmt.Errorf("submit failed: %w", err)
+	}
+	submitResp.Body.Close()
+
+	fmt.Printf("naukri: submit status: %s\n", submitResp.Status)
+	fmt.Printf("naukri: submit response: %s\n", string(submitBody))
+
+	return nil
 }
