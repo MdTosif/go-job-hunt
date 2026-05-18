@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/tosif-practice/go-job-hunt/autoupdate/foundit"
+	"github.com/tosif-practice/go-job-hunt/autoupdate/hirist"
 	"github.com/tosif-practice/go-job-hunt/autoupdate/naukri"
 )
 
@@ -21,6 +22,9 @@ func main() {
 
 	// FoundIt-specific flags
 	founditCookieFile := flag.String("founditCookieFile", "cookies-foundit.txt", "path to FoundIt cookie file")
+
+	// Hirist-specific flags
+	hiristCookieFile := flag.String("hiristCookieFile", "cookies-hirist.txt", "path to Hirist cookie file")
 
 	flag.Parse()
 
@@ -40,12 +44,16 @@ func main() {
 		foundit: foundit.Config{
 			CookieFile: *founditCookieFile,
 		},
+		hirist: hirist.Config{
+			CookieFile: *hiristCookieFile,
+		},
 	})
 }
 
 type platformConfigs struct {
 	naukri  naukri.Config
 	foundit foundit.Config
+	hirist  hirist.Config
 }
 
 func runAllPlatforms(filePath string, configs platformConfigs) {
@@ -54,8 +62,13 @@ func runAllPlatforms(filePath string, configs platformConfigs) {
 		log.Printf("naukri: %v", err)
 	}
 
-	fmt.Println("\n=== Running FoundIt ===")
-	if err := foundit.Run(filePath, configs.foundit); err != nil {
-		log.Printf("foundit: %v", err)
+	// fmt.Println("\n=== Running FoundIt ===")
+	// if err := foundit.Run(filePath, configs.foundit); err != nil {
+	// 	log.Printf("foundit: %v", err)
+	// }
+
+	fmt.Println("\n=== Running Hirist ===")
+	if err := hirist.Run(filePath, configs.hirist); err != nil {
+		log.Printf("hirist: %v", err)
 	}
 }
