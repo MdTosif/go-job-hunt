@@ -2,3 +2,5 @@ cookies*.txt
 *.pdf
 notes.txt
 main
+
+.DS_Store

@@ -372,6 +372,27 @@ func Run(filePath string, cfg Config) error {
 	}
 	submitResp.Body.Close()
 
+	// If 401, token expired - refresh and retry
+	if submitResp.StatusCode == 401 {
+		fmt.Println("naukri: token expired (401), refreshing...")
+		token, cookies, err = LoginStatus(cookies)
+		if err != nil {
+			return fmt.Errorf("login-status failed after 401: %w", err)
+		}
+		if err := SaveCookieHeader(cfg.CookieFile, cookies); err != nil {
+			fmt.Printf("naukri: warning: failed to save merged cookies: %v\n", err)
+		} else {
+			fmt.Println("naukri: updated cookie file with fresh token")
+		}
+
+		// Retry submit with fresh token
+		submitResp, submitBody, err = SubmitResume(cfg.ProfileID, cfg.FormKey, cfg.FileKey, token, cookies)
+		if err != nil {
+			return fmt.Errorf("submit retry failed: %w", err)
+		}
+		submitResp.Body.Close()
+	}
+
 	fmt.Printf("naukri: submit status: %s\n", submitResp.Status)
 	fmt.Printf("naukri: submit response: %s\n", string(submitBody))
 
