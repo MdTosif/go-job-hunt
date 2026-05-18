@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-const attachResumeURL = "https://www.foundit.in/seeker-profile/api/attachResumeV1"
+const attachResumeURL = "https://www.foundit.in/seeker-profile/api/attachResume?saveToDB=false&isExperienced=true"
 
 // Config holds FoundIt-specific configuration
 type Config struct {
@@ -105,9 +105,6 @@ func uploadResume(filePath, cookieHeader string) (*http.Response, []byte, error)
 
 	var body bytes.Buffer
 	writer := multipart.NewWriter(&body)
-	if err := writer.SetBoundary("----WebKitFormBoundaryDD98xR9DZT12R2s9"); err != nil {
-		return nil, nil, fmt.Errorf("set boundary: %w", err)
-	}
 
 	part, err := writer.CreateFormFile("file", filepath.Base(filePath))
 	if err != nil {
@@ -128,18 +125,12 @@ func uploadResume(filePath, cookieHeader string) (*http.Response, []byte, error)
 	}
 
 	req.Header.Set("Accept", "*/*")
-	req.Header.Set("Accept-Language", "en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7")
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-	req.Header.Set("Origin", "https://www.foundit.in")
-	req.Header.Set("Priority", "u=1, i")
 	req.Header.Set("Referer", "https://www.foundit.in/seeker/profile")
-	req.Header.Set("Sec-CH-UA", `"Google Chrome";v="147", "Not.A/Brand";v="8", "Chromium";v="147"`)
+	req.Header.Set("Sec-CH-UA", `"Chromium";v="148", "Google Chrome";v="148", "Not/A)Brand";v="99"`)
 	req.Header.Set("Sec-CH-UA-Mobile", "?0")
 	req.Header.Set("Sec-CH-UA-Platform", `"macOS"`)
-	req.Header.Set("Sec-Fetch-Dest", "empty")
-	req.Header.Set("Sec-Fetch-Mode", "cors")
-	req.Header.Set("Sec-Fetch-Site", "same-origin")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36")
 	req.Header.Set("Cookie", cookieHeader)
 
 	client := &http.Client{}

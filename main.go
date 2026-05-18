@@ -62,10 +62,10 @@ func runAllPlatforms(filePath string, configs platformConfigs) {
 		log.Printf("naukri: %v", err)
 	}
 
-	// fmt.Println("\n=== Running FoundIt ===")
-	// if err := foundit.Run(filePath, configs.foundit); err != nil {
-	// 	log.Printf("foundit: %v", err)
-	// }
+	fmt.Println("\n=== Running FoundIt ===")
+	if err := foundit.Run(filePath, configs.foundit); err != nil {
+		log.Printf("foundit: %v", err)
+	}
 
 	fmt.Println("\n=== Running Hirist ===")
 	if err := hirist.Run(filePath, configs.hirist); err != nil {
